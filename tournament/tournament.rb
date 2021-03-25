@@ -1,22 +1,16 @@
 # A tournament takes place for a collection of teams and involves many games
 class Tournament
 
-    # Available points for the possible outcomes
-    POINTS_FOR_A_WIN = 3
-    POINTS_FOR_A_DRAW = 1
-    POINTS_FOR_A_LOSS = 0
-
-    # Formatting for the report
+    # Formatting for the report title
     REPORT_TITLE = 
     <<~TITLE
     Team                           | MP |  W |  D |  L |  P
     TITLE
-    REPORT_FORMAT = "%-30s | %2s |  %s |  %s |  %s |  %s\n"
 
     # Initialise by collecting games and parsing the full report
     def initialize
-        @board = 0
-        @teams = Hash.new {|hash,key| hash[key] = Team.new(key)} # Make a new team as needed
+        @teams["Allegoric Alaskans"] = Team.new(name: "Allegoric Alaskans")
+        # @teams = Hash.new {|hash,key| hash[key] = Team.new(key)} # Make a new team as needed
         lines = input.split("\n")                                # Split games by a new line
         lines.each {|line| parse(line)}                          # Parse every game played
     end
@@ -30,14 +24,17 @@ class Tournament
     
     # Generate a tally
     def self.tally(input)
-        REPORT_TITLE + make_board
+        team1 = Team.new(name: "Allegoric Alaskans")
+        puts @teams["Allegoric Alaskans"].formatted_row
+        puts "things" + team1.formatted_row
+        # REPORT_TITLE + @teams
+        # team1.name
     end
 
     # Generate a report
     def self.make_board
-        if @board.nil? @board = ''
         @teams.each do |team|
-            @board << REPORT_FORMAT % [team.name, 0, 1, 1, 1, 1]
+            team.formatted_row
         end
     end
 
@@ -47,14 +44,14 @@ class Tournament
     def parse(line)
         team1, team2, result = line.split(';')
         if(result == 'win')
-            @teams[team1].win
-            @teams[team2].lose
+            @teams[team1].won_game
+            @teams[team2].lost_game
         elsif(result == 'loss')
-            @teams[team1].lose
-            @teams[team2].win
+            @teams[team1].lost_game
+            @teams[team2].won_game
         elsif(result == 'draw')
-            @teams[team1].tie
-            @teams[team2].tie
+            @teams[team1].tied_game
+            @teams[team2].tied_game
         end
     end
 
@@ -64,7 +61,15 @@ end
 class Team
 
     # Want to read a team's name externally
-    attr_reader :name
+    attr_accessor :name
+
+    # Available points for the possible outcomes
+    POINTS_FOR_A_WIN = 3
+    POINTS_FOR_A_TIE = 1
+    POINTS_FOR_A_LOSS = 0
+
+    # Row formatting
+    ROW_FORMAT = "%-30s | %2s |  %s |  %s |  %s |  %s\n"
 
     # Initialise by identifying a name and zeroing out the team's tally
     def initialize(name)
@@ -74,10 +79,39 @@ class Team
         @ties = 0
     end
 
+    # Game outcomes
+    def won_game
+        @wins += 1
+    end
+
+    def lost_game
+        @losses += 1
+    end
+
+    def tied_game
+        @ties += 1
+    end
+
+    # Calculable results
+    def matches_played
+        @wins + @losses + @ties
+    end
+
+    def score
+        @wins * POINTS_FOR_A_WIN
+         + @losses * POINTS_FOR_A_LOSS
+         + @ties * POINTS_FOR_A_TIE
+    end
+
+    # A tally row
+    def formatted_row
+        ROW_FORMAT % [@name, matches_played, @wins, @ties, @losses, score]
+    end
+
 end
 
 input = <<~INPUT
-
+Allegoric Alaskans;Blithering Badgers;win
 INPUT
 
 report = Tournament.tally(input)
